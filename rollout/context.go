@@ -7,8 +7,14 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
+const (
+	RolloutType = "rollout"
+)
+
 type rolloutContext struct {
 	reconcilerBase
+	// maybe do this track if this is a stateful or deployment rollout
+	rolloutType string
 
 	log *log.Entry
 	// rollout is the rollout being reconciled
@@ -28,6 +34,9 @@ type rolloutContext struct {
 	olderRSs []*appsv1.ReplicaSet
 	// otherRSs are ReplicaSets which are neither new or stable (allRSs - newRS - stableRS)
 	otherRSs []*appsv1.ReplicaSet
+
+	// controller revisions for the rollout if using statefulset or daemonsets
+	controllerRevisions []*appsv1.ControllerRevision
 
 	currentArs analysisutil.CurrentAnalysisRuns
 	otherArs   []*v1alpha1.AnalysisRun

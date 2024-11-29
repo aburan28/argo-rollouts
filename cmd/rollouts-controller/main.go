@@ -245,6 +245,8 @@ func newCommand() *cobra.Command {
 					smiClient,
 					discoveryClient,
 					kubeInformerFactory.Apps().V1().ReplicaSets(),
+					kubeInformerFactory.Apps().V1().ControllerRevisions(),
+					kubeInformerFactory.Apps().V1().StatefulSets(),
 					kubeInformerFactory.Core().V1().Services(),
 					ingressWrapper,
 					jobInformerFactory.Batch().V1().Jobs(),

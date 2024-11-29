@@ -107,6 +107,8 @@ type ControllerConfig struct {
 	AnalysisRunInformer             informers.AnalysisRunInformer
 	AnalysisTemplateInformer        informers.AnalysisTemplateInformer
 	ClusterAnalysisTemplateInformer informers.ClusterAnalysisTemplateInformer
+	ControllerRevisionInformer      appsinformers.ControllerRevisionInformer
+	StatefulSetInformer             appsinformers.StatefulSetInformer
 	ReplicaSetInformer              appsinformers.ReplicaSetInformer
 	ServicesInformer                coreinformers.ServiceInformer
 	IngressWrapper                  IngressWrapper
@@ -143,6 +145,8 @@ type reconcilerBase struct {
 	replicaSetInformer            cache.SharedIndexInformer
 	rolloutsSynced                cache.InformerSynced
 	rolloutsIndexer               cache.Indexer
+	statefulSetInformer           appsinformers.StatefulSetInformer
+	controllerRevisionInformer    appsinformers.ControllerRevisionInformer
 	servicesLister                v1.ServiceLister
 	ingressWrapper                IngressWrapper
 	experimentsLister             listers.ExperimentLister
@@ -197,6 +201,8 @@ func NewController(cfg ControllerConfig) *Controller {
 		rolloutsIndexer:               cfg.RolloutsInformer.Informer().GetIndexer(),
 		rolloutsLister:                cfg.RolloutsInformer.Lister(),
 		rolloutsSynced:                cfg.RolloutsInformer.Informer().HasSynced,
+		statefulSetInformer:           cfg.StatefulSetInformer.Informer(),
+		controllerRevisionInformer:    cfg.ControllerRevisionInformer.Informer(),
 		servicesLister:                cfg.ServicesInformer.Lister(),
 		ingressWrapper:                cfg.IngressWrapper,
 		experimentsLister:             cfg.ExperimentInformer.Lister(),
@@ -483,6 +489,10 @@ func (c *Controller) writeBackToInformer(ro *v1alpha1.Rollout) {
 }
 
 func (c *Controller) newRolloutContext(rollout *v1alpha1.Rollout) (*rolloutContext, error) {
+	if rollout.Spec.WorkloadRef.Kind == "StatefulSet" {
+		rollout
+	}
+
 	rsList, err := c.getReplicaSetsForRollouts(rollout)
 	if err != nil {
 		return nil, err
