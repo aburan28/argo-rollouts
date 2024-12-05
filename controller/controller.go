@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/argoproj/argo-rollouts/statefulrollout"
 	"github.com/argoproj/argo-rollouts/utils/plugin"
 
 	istioutil "github.com/argoproj/argo-rollouts/utils/istio"
@@ -24,6 +25,7 @@ import (
 	notificationapi "github.com/argoproj/notifications-engine/pkg/api"
 	notificationcontroller "github.com/argoproj/notifications-engine/pkg/controller"
 
+	"github.com/argoproj/argo-rollouts/statefulrollout"
 	"github.com/pkg/errors"
 	smiclientset "github.com/servicemeshinterface/smi-sdk-go/pkg/gen/client/split/clientset/versioned"
 	log "github.com/sirupsen/logrus"
@@ -120,15 +122,16 @@ func NewLeaderElectionOptions() *LeaderElectionOptions {
 
 // Manager is the controller implementation for Argo-Rollout resources
 type Manager struct {
-	wg                      *sync.WaitGroup
-	metricsServer           *metrics.MetricsServer
-	healthzServer           *http.Server
-	rolloutController       *rollout.Controller
-	experimentController    *experiments.Controller
-	analysisController      *analysis.Controller
-	serviceController       *service.Controller
-	ingressController       *ingress.Controller
-	notificationsController notificationcontroller.NotificationController
+	wg                        *sync.WaitGroup
+	metricsServer             *metrics.MetricsServer
+	healthzServer             *http.Server
+	rolloutController         *rollout.Controller
+	experimentController      *experiments.Controller
+	analysisController        *analysis.Controller
+	serviceController         *service.Controller
+	ingressController         *ingress.Controller
+	statefulRolloutController *statefulrollout.Controller
+	notificationsController   notificationcontroller.NotificationController
 
 	rolloutSynced                 cache.InformerSynced
 	experimentSynced              cache.InformerSynced
@@ -255,6 +258,8 @@ func NewManager(
 	smiclientset smiclientset.Interface,
 	discoveryClient discovery.DiscoveryInterface,
 	replicaSetInformer appsinformers.ReplicaSetInformer,
+	controllerRevisionInformer appsinformers.ControllerRevisionInformer,
+	statefulsetInformer appsinformers.StatefulSetInformer,
 	servicesInformer coreinformers.ServiceInformer,
 	ingressWrap *ingressutil.IngressWrap,
 	jobInformer batchinformers.JobInformer,
@@ -336,6 +341,7 @@ func NewManager(
 		IstioVirtualServiceInformer:     istioVirtualServiceInformer,
 		IstioDestinationRuleInformer:    istioDestinationRuleInformer,
 		ReplicaSetInformer:              replicaSetInformer,
+		StatefulSetInformer:             statefulsetInformer,
 		ServicesInformer:                servicesInformer,
 		IngressWrapper:                  ingressWrap,
 		RolloutsInformer:                rolloutsInformer,
@@ -351,6 +357,7 @@ func NewManager(
 		KubeClientSet:                   kubeclientset,
 		ArgoProjClientset:               argoprojclientset,
 		ReplicaSetInformer:              replicaSetInformer,
+		StatefulSetInformer:             statefulsetInformer,
 		ExperimentsInformer:             experimentsInformer,
 		AnalysisRunInformer:             analysisRunInformer,
 		AnalysisTemplateInformer:        analysisTemplateInformer,
@@ -399,6 +406,35 @@ func NewManager(
 		NGINXClasses: nginxIngressClasses,
 	})
 
+	statefulRolloutController := statefulrollout.NewController(
+		statefulrollout.ControllerConfig{
+			Namespace:                       namespace,
+			KubeClientSet:                   kubeclientset,
+			ArgoProjClientset:               argoprojclientset,
+			DynamicClientSet:                dynamicclientset,
+			RefResolver:                     refResolver,
+			SmiClientSet:                    smiclientset,
+			ExperimentInformer:              experimentsInformer,
+			AnalysisRunInformer:             analysisRunInformer,
+			AnalysisTemplateInformer:        analysisTemplateInformer,
+			ClusterAnalysisTemplateInformer: clusterAnalysisTemplateInformer,
+			IstioPrimaryDynamicClient:       istioPrimaryDynamicClient,
+			IstioVirtualServiceInformer:     istioVirtualServiceInformer,
+			IstioDestinationRuleInformer:    istioDestinationRuleInformer,
+			ReplicaSetInformer:              replicaSetInformer,
+			StatefulSetInformer:             statefulsetInformer,
+			ServicesInformer:                servicesInformer,
+			IngressWrapper:                  ingressWrap,
+			RolloutsInformer:                rolloutsInformer,
+			ResyncPeriod:                    resyncPeriod,
+			RolloutWorkQueue:                rolloutWorkqueue,
+			ServiceWorkQueue:                serviceWorkqueue,
+			IngressWorkQueue:                ingressWorkqueue,
+			MetricsServer:                   metricsServer,
+			Recorder:                        recorder,
+		},
+	)
+
 	cm := &Manager{
 		wg:                                   &sync.WaitGroup{},
 		metricsServer:                        metricsServer,
@@ -423,6 +459,7 @@ func NewManager(
 		serviceController:                    serviceController,
 		ingressController:                    ingressController,
 		experimentController:                 experimentController,
+		statefulRolloutController:            statefulRolloutController,
 		analysisController:                   analysisController,
 		notificationsController:              notificationsController,
 		refResolver:                          refResolver,
@@ -599,6 +636,7 @@ func (c *Manager) startLeading(ctx context.Context, rolloutThreadiness, serviceT
 		go wait.Until(func() { c.wg.Add(1); c.experimentController.Run(ctx, experimentThreadiness); c.wg.Done() }, time.Second, ctx.Done())
 		go wait.Until(func() { c.wg.Add(1); c.analysisController.Run(ctx, analysisThreadiness); c.wg.Done() }, time.Second, ctx.Done())
 		go wait.Until(func() { c.wg.Add(1); c.notificationsController.Run(rolloutThreadiness, ctx.Done()); c.wg.Done() }, time.Second, ctx.Done())
+		go wait.Until(func() { c.wg.Add(1); c.statefulRolloutController.Run(rolloutThreadiness, ctx.Done()); c.wg.Done() }, time.Second, ctx.Done())
 
 	}
 	log.Info("Started controller")

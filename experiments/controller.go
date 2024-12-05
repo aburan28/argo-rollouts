@@ -84,6 +84,8 @@ type ControllerConfig struct {
 	KubeClientSet                   kubernetes.Interface
 	ArgoProjClientset               clientset.Interface
 	ReplicaSetInformer              appsinformers.ReplicaSetInformer
+	StatefulSetInformer             appsinformers.StatefulSetInformer
+	ControllerRevisionInformer      appsinformers.ControllerRevisionInformer
 	ExperimentsInformer             informers.ExperimentInformer
 	AnalysisRunInformer             informers.AnalysisRunInformer
 	AnalysisTemplateInformer        informers.AnalysisTemplateInformer
