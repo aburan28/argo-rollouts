@@ -81,9 +81,9 @@ type Controller struct {
 	// namespace which namespace(s) operates on
 	namespace string
 	// rsControl is used for adopting/releasing replica sets.
-	replicaSetControl controller.RSControlInterface
-
-	metricsServer *metrics.MetricsServer
+	replicaSetControl        controller.RSControlInterface
+	controllerRevsionControl controller.ControllerRevisionControlInterface
+	metricsServer            *metrics.MetricsServer
 
 	// workqueue is a rate limited work queue. This is used to queue work to be
 	// processed instead of performing it as soon as a change happens. This
@@ -108,6 +108,8 @@ type ControllerConfig struct {
 	AnalysisTemplateInformer        informers.AnalysisTemplateInformer
 	ClusterAnalysisTemplateInformer informers.ClusterAnalysisTemplateInformer
 	ReplicaSetInformer              appsinformers.ReplicaSetInformer
+	StatefulSetInformer             appsinformers.StatefulSetInformer
+	ControllerRevisionInformer      appsinformers.ControllerRevisionInformer
 	ServicesInformer                coreinformers.ServiceInformer
 	IngressWrapper                  IngressWrapper
 	RolloutsInformer                informers.RolloutInformer
@@ -134,8 +136,9 @@ type reconcilerBase struct {
 	dynamicclientset dynamic.Interface
 	smiclientset     smiclientset.Interface
 
-	refResolver TemplateRefResolver
-
+	refResolver                   TemplateRefResolver
+	controllerRevisionLister      appslisters.ControllerRevisionLister
+	statefulSetLister             appslisters.StatefulSetLister
 	replicaSetLister              appslisters.ReplicaSetLister
 	replicaSetSynced              cache.InformerSynced
 	rolloutsInformer              cache.SharedIndexInformer
@@ -483,96 +486,180 @@ func (c *Controller) writeBackToInformer(ro *v1alpha1.Rollout) {
 }
 
 func (c *Controller) newRolloutContext(rollout *v1alpha1.Rollout) (*rolloutContext, error) {
-	rsList, err := c.getReplicaSetsForRollouts(rollout)
-	if err != nil {
-		return nil, err
-	}
+	// if rollout.Spec.WorkloadRef.Kind == "StatefulSet" {
+	// 	roCtx := rolloutContext{
+	// 		rollout:    rollout,
+	// 		log:        logCtx,
 
-	newRS := replicasetutil.FindNewReplicaSet(rollout, rsList)
-	olderRSs := replicasetutil.FindOldReplicaSets(rollout, rsList, newRS)
-	stableRS := replicasetutil.GetStableRS(rollout, newRS, olderRSs)
-	otherRSs := replicasetutil.GetOtherRSs(rollout, newRS, stableRS, rsList)
+	// 		currentArs: currentArs,
+	// 		otherArs:   otherArs,
+	// 		currentEx:  currentEx,
+	// 		otherExs:   otherExs,
+	// 		newStatus: v1alpha1.RolloutStatus{
+	// 			RestartedAt: rollout.Status.RestartedAt,
+	// 			ALB:         rollout.Status.ALB,
+	// 			ALBs:        rollout.Status.ALBs,
+	// 		},
+	// 		pauseContext: &pauseContext{
+	// 			rollout: rollout,
+	// 			log:     logCtx,
+	// 		},
+	// 		stepPluginContext: &stepPluginContext{
+	// 			resolver: plugin.NewResolver(),
+	// 			log:      logCtx,
+	// 		},
+	// 		reconcilerBase: c.reconcilerBase,
+	// 	}
+	// 	return &roCtx, nil
 
-	exList, err := c.getExperimentsForRollout(rollout)
-	if err != nil {
-		return nil, err
-	}
-	currentEx := experimentutil.GetCurrentExperiment(rollout, exList)
-	otherExs := experimentutil.GetOldExperiments(rollout, exList)
+	// } else {
+	if rollout.Spec.WorkloadRef.Kind == "Deployment" {
+		rsList, err := c.getReplicaSetsForRollouts(rollout)
+		if err != nil {
+			return nil, err
+		}
 
-	arList, err := c.getAnalysisRunsForRollout(rollout)
-	if err != nil {
-		return nil, err
-	}
-	currentArs, otherArs := analysisutil.FilterCurrentRolloutAnalysisRuns(arList, rollout)
+		newRS := replicasetutil.FindNewReplicaSet(rollout, rsList)
+		olderRSs := replicasetutil.FindOldReplicaSets(rollout, rsList, newRS)
+		stableRS := replicasetutil.GetStableRS(rollout, newRS, olderRSs)
+		otherRSs := replicasetutil.GetOtherRSs(rollout, newRS, stableRS, rsList)
 
-	logCtx := logutil.WithRollout(rollout)
-	roCtx := rolloutContext{
-		rollout:    rollout,
-		log:        logCtx,
-		newRS:      newRS,
-		stableRS:   stableRS,
-		olderRSs:   olderRSs,
-		otherRSs:   otherRSs,
-		allRSs:     rsList,
-		currentArs: currentArs,
-		otherArs:   otherArs,
-		currentEx:  currentEx,
-		otherExs:   otherExs,
-		newStatus: v1alpha1.RolloutStatus{
-			RestartedAt: rollout.Status.RestartedAt,
-			ALB:         rollout.Status.ALB,
-			ALBs:        rollout.Status.ALBs,
-		},
-		pauseContext: &pauseContext{
-			rollout: rollout,
-			log:     logCtx,
-		},
-		stepPluginContext: &stepPluginContext{
-			resolver: plugin.NewResolver(),
-			log:      logCtx,
-		},
-		reconcilerBase: c.reconcilerBase,
-	}
+		exList, err := c.getExperimentsForRollout(rollout)
+		if err != nil {
+			return nil, err
+		}
+		currentEx := experimentutil.GetCurrentExperiment(rollout, exList)
+		otherExs := experimentutil.GetOldExperiments(rollout, exList)
 
-	// Get Rollout Validation errors
-	err = roCtx.getRolloutValidationErrors()
-	if err != nil {
-		if vErr, ok := err.(*field.Error); ok {
-			// We want to frequently requeue rollouts with InvalidSpec errors, because the error
-			// condition might be timing related (e.g. the Rollout was applied before the Service).
-			c.enqueueRolloutAfter(roCtx.rollout, 20*time.Second)
-			err := roCtx.createInvalidRolloutCondition(vErr, roCtx.rollout)
+		arList, err := c.getAnalysisRunsForRollout(rollout)
+		if err != nil {
+			return nil, err
+		}
+		currentArs, otherArs := analysisutil.FilterCurrentRolloutAnalysisRuns(arList, rollout)
+
+		logCtx := logutil.WithRollout(rollout)
+		roCtx := rolloutContext{
+			rollout:    rollout,
+			log:        logCtx,
+			newRS:      newRS,
+			stableRS:   stableRS,
+			olderRSs:   olderRSs,
+			otherRSs:   otherRSs,
+			allRSs:     rsList,
+			currentArs: currentArs,
+			otherArs:   otherArs,
+			currentEx:  currentEx,
+			otherExs:   otherExs,
+			newStatus: v1alpha1.RolloutStatus{
+				RestartedAt: rollout.Status.RestartedAt,
+				ALB:         rollout.Status.ALB,
+				ALBs:        rollout.Status.ALBs,
+			},
+			pauseContext: &pauseContext{
+				rollout: rollout,
+				log:     logCtx,
+			},
+			stepPluginContext: &stepPluginContext{
+				resolver: plugin.NewResolver(),
+				log:      logCtx,
+			},
+			reconcilerBase: c.reconcilerBase,
+		}
+
+		// Get Rollout Validation errors
+		err = roCtx.getRolloutValidationErrors()
+		if err != nil {
+			if vErr, ok := err.(*field.Error); ok {
+				// We want to frequently requeue rollouts with InvalidSpec errors, because the error
+				// condition might be timing related (e.g. the Rollout was applied before the Service).
+				c.enqueueRolloutAfter(roCtx.rollout, 20*time.Second)
+				err := roCtx.createInvalidRolloutCondition(vErr, roCtx.rollout)
+				if err != nil {
+					return nil, err
+				}
+				return nil, vErr
+			}
+			return nil, err
+		}
+
+		if roCtx.newRS == nil {
+			roCtx.newRS, err = roCtx.createDesiredReplicaSet()
 			if err != nil {
 				return nil, err
 			}
-			return nil, vErr
+			roCtx.olderRSs = replicasetutil.FindOldReplicaSets(roCtx.rollout, rsList, roCtx.newRS)
+			roCtx.stableRS = replicasetutil.GetStableRS(roCtx.rollout, roCtx.newRS, roCtx.olderRSs)
+			roCtx.otherRSs = replicasetutil.GetOtherRSs(roCtx.rollout, roCtx.newRS, roCtx.stableRS, rsList)
+			roCtx.allRSs = append(rsList, roCtx.newRS)
+			err := roCtx.replicaSetInformer.GetIndexer().Add(roCtx.newRS)
+			if err != nil {
+				return nil, err
+			}
 		}
-		return nil, err
-	}
 
-	if roCtx.newRS == nil {
-		roCtx.newRS, err = roCtx.createDesiredReplicaSet()
+		if rolloututil.IsFullyPromoted(rollout) && roCtx.pauseContext.IsAborted() {
+			logCtx.Warnf("Removing abort condition from fully promoted rollout")
+			roCtx.pauseContext.RemoveAbort()
+		}
+		// carry over existing recorded weights
+		roCtx.newStatus.Canary.Weights = rollout.Status.Canary.Weights
+		return &roCtx, nil
+	} else {
+		// statefulSetList, err := c.getStatefulSetsForRollouts(rollout)
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		controllerRevisionList, err := c.getControllerRevisionsForRollouts(rollout)
 		if err != nil {
 			return nil, err
 		}
-		roCtx.olderRSs = replicasetutil.FindOldReplicaSets(roCtx.rollout, rsList, roCtx.newRS)
-		roCtx.stableRS = replicasetutil.GetStableRS(roCtx.rollout, roCtx.newRS, roCtx.olderRSs)
-		roCtx.otherRSs = replicasetutil.GetOtherRSs(roCtx.rollout, roCtx.newRS, roCtx.stableRS, rsList)
-		roCtx.allRSs = append(rsList, roCtx.newRS)
-		err := roCtx.replicaSetInformer.GetIndexer().Add(roCtx.newRS)
+
+		// newRS := replicasetutil.FindNewReplicaSet(rollout, rsList)
+		// olderRSs := replicasetutil.FindOldReplicaSets(rollout, rsList, newRS)
+		// stableRS := replicasetutil.GetStableRS(rollout, newRS, olderRSs)
+		// otherRSs := replicasetutil.GetOtherRSs(rollout, newRS, stableRS, rsList)
+
+		exList, err := c.getExperimentsForRollout(rollout)
 		if err != nil {
 			return nil, err
 		}
-	}
+		currentEx := experimentutil.GetCurrentExperiment(rollout, exList)
+		otherExs := experimentutil.GetOldExperiments(rollout, exList)
 
-	if rolloututil.IsFullyPromoted(rollout) && roCtx.pauseContext.IsAborted() {
-		logCtx.Warnf("Removing abort condition from fully promoted rollout")
-		roCtx.pauseContext.RemoveAbort()
+		arList, err := c.getAnalysisRunsForRollout(rollout)
+		if err != nil {
+			return nil, err
+		}
+		currentArs, otherArs := analysisutil.FilterCurrentRolloutAnalysisRuns(arList, rollout)
+
+		logCtx := logutil.WithRollout(rollout)
+		roCtx := rolloutContext{
+			rollout:                rollout,
+			log:                    logCtx,
+			oldControllerRevisions: controllerRevisionList,
+			// oldStatefulSet:         statefulSetList,
+			currentArs: currentArs,
+			otherArs:   otherArs,
+			currentEx:  currentEx,
+			otherExs:   otherExs,
+			newStatus: v1alpha1.RolloutStatus{
+				RestartedAt: rollout.Status.RestartedAt,
+				ALB:         rollout.Status.ALB,
+				ALBs:        rollout.Status.ALBs,
+			},
+			pauseContext: &pauseContext{
+				rollout: rollout,
+				log:     logCtx,
+			},
+			stepPluginContext: &stepPluginContext{
+				resolver: plugin.NewResolver(),
+				log:      logCtx,
+			},
+			reconcilerBase: c.reconcilerBase,
+		}
+		return &roCtx, nil
 	}
-	// carry over existing recorded weights
-	roCtx.newStatus.Canary.Weights = rollout.Status.Canary.Weights
-	return &roCtx, nil
 }
 
 func (c *rolloutContext) getRolloutValidationErrors() error {

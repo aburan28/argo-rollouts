@@ -132,6 +132,9 @@ func (c *rolloutContext) setRolloutRevision(revision string) error {
 }
 
 func (c *rolloutContext) createDesiredReplicaSet() (*appsv1.ReplicaSet, error) {
+	if c.rollout.Spec.WorkloadRef.Kind == "StatefulSet" {
+		return nil, nil
+	}
 	ctx := context.TODO()
 	// Calculate the max revision number among all old RSes
 	maxOldRevision := replicasetutil.MaxRevision(c.olderRSs)

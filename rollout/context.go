@@ -29,6 +29,12 @@ type rolloutContext struct {
 	// otherRSs are ReplicaSets which are neither new or stable (allRSs - newRS - stableRS)
 	otherRSs []*appsv1.ReplicaSet
 
+	oldStatefulSet         []*appsv1.StatefulSet
+	newStatefulSet         *appsv1.StatefulSet
+	statefulSetList        []*appsv1.StatefulSet
+	oldControllerRevisions []*appsv1.ControllerRevision
+	newControllerRevision  *appsv1.ControllerRevision
+
 	currentArs analysisutil.CurrentAnalysisRuns
 	otherArs   []*v1alpha1.AnalysisRun
 
