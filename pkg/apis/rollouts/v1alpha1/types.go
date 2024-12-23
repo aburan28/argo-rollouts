@@ -13,6 +13,17 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+type StatefulRollout struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	Spec   StatefulRolloutSpec   `json:"spec" protobuf:"bytes,2,opt,name=spec"`
+	Status StatefulRolloutStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
+}
+
+type StatefulRolloutSpec struct{}
+type StatefulRolloutStatus struct{}
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:resource:path=rollouts,shortName=ro
