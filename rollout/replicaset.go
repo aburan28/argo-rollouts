@@ -29,6 +29,7 @@ const (
 
 // removeScaleDownDelay removes the `scale-down-deadline` annotation from the ReplicaSet (if it exists)
 func (c *rolloutContext) removeScaleDownDelay(rs *appsv1.ReplicaSet) error {
+
 	ctx := context.TODO()
 	if !replicasetutil.HasScaleDownDeadline(rs) {
 		return nil
@@ -44,6 +45,7 @@ func (c *rolloutContext) removeScaleDownDelay(rs *appsv1.ReplicaSet) error {
 		return fmt.Errorf("error updating replicaset informer in removeScaleDownDelay: %w", err)
 	}
 	return err
+
 }
 
 // addScaleDownDelay injects the `scale-down-deadline` annotation to the ReplicaSet, or if

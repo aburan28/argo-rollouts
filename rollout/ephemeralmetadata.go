@@ -13,6 +13,7 @@ import (
 
 // reconcileEphemeralMetadata syncs canary/stable ephemeral metadata to ReplicaSets and pods
 func (c *rolloutContext) reconcileEphemeralMetadata() error {
+
 	ctx := context.TODO()
 	var newMetadata, stableMetadata *v1alpha1.PodTemplateMetadata
 	if c.rollout.Spec.Strategy.Canary != nil {
@@ -28,18 +29,18 @@ func (c *rolloutContext) reconcileEphemeralMetadata() error {
 
 	if fullyRolledOut {
 		// We are in a steady-state (fully rolled out). newRS is the stableRS. there is no longer a canary
-		err := c.syncEphemeralMetadata(ctx, c.newRS, stableMetadata)
+		err := c.syncEphemeralMetadata(ctx, c.newRS, nil, stableMetadata)
 		if err != nil {
 			return err
 		}
 	} else {
 		// we are in a upgrading state. newRS is a canary
-		err := c.syncEphemeralMetadata(ctx, c.newRS, newMetadata)
+		err := c.syncEphemeralMetadata(ctx, c.newRS, nil, newMetadata)
 		if err != nil {
 			return err
 		}
 		// sync stable metadata to the stable rs
-		err = c.syncEphemeralMetadata(ctx, c.stableRS, stableMetadata)
+		err = c.syncEphemeralMetadata(ctx, c.stableRS, nil, stableMetadata)
 		if err != nil {
 			return err
 		}
@@ -47,7 +48,7 @@ func (c *rolloutContext) reconcileEphemeralMetadata() error {
 
 	// Iterate all other ReplicaSets and verify we don't have injected metadata for them
 	for _, rs := range c.otherRSs {
-		err := c.syncEphemeralMetadata(ctx, rs, nil)
+		err := c.syncEphemeralMetadata(ctx, rs, nil, nil)
 		if err != nil {
 			return err
 		}
@@ -55,39 +56,47 @@ func (c *rolloutContext) reconcileEphemeralMetadata() error {
 	return nil
 }
 
-func (c *rolloutContext) syncEphemeralMetadata(ctx context.Context, rs *appsv1.ReplicaSet, podMetadata *v1alpha1.PodTemplateMetadata) error {
-	if rs == nil {
-		return nil
-	}
-	modifiedRS, modified := replicasetutil.SyncReplicaSetEphemeralPodMetadata(rs, podMetadata)
-	if !modified {
-		return nil
-	}
-	// 1. Sync ephemeral metadata to pods
-	pods, err := replicasetutil.GetPodsOwnedByReplicaSet(ctx, c.kubeclientset, rs)
-	if err != nil {
-		return err
-	}
-	existingPodMetadata := replicasetutil.ParseExistingPodMetadata(rs)
-	for _, pod := range pods {
-		newPodObjectMeta, podModified := replicasetutil.SyncEphemeralPodMetadata(&pod.ObjectMeta, existingPodMetadata, podMetadata)
-		if podModified {
-			pod.ObjectMeta = *newPodObjectMeta
-			_, err = c.kubeclientset.CoreV1().Pods(pod.Namespace).Update(ctx, pod, metav1.UpdateOptions{})
-			if err != nil {
-				return err
-			}
-			c.log.Infof("synced ephemeral metadata %v to Pod %s", podMetadata, pod.Name)
+func (c *rolloutContext) syncEphemeralMetadata(ctx context.Context, rs *appsv1.ReplicaSet, ss *appsv1.StatefulSet, podMetadata *v1alpha1.PodTemplateMetadata) error {
+	if c.deploymentRolloutContext != nil {
+		if rs == nil {
+			return nil
 		}
-	}
+		modifiedRS, modified := replicasetutil.SyncReplicaSetEphemeralPodMetadata(rs, podMetadata)
+		if !modified {
+			return nil
+		}
+		// 1. Sync ephemeral metadata to pods
+		pods, err := replicasetutil.GetPodsOwnedByReplicaSet(ctx, c.kubeclientset, rs)
+		if err != nil {
+			return err
+		}
+		existingPodMetadata := replicasetutil.ParseExistingPodMetadata(rs)
+		for _, pod := range pods {
+			newPodObjectMeta, podModified := replicasetutil.SyncEphemeralPodMetadata(&pod.ObjectMeta, existingPodMetadata, podMetadata)
+			if podModified {
+				pod.ObjectMeta = *newPodObjectMeta
+				_, err = c.kubeclientset.CoreV1().Pods(pod.Namespace).Update(ctx, pod, metav1.UpdateOptions{})
+				if err != nil {
+					return err
+				}
+				c.log.Infof("synced ephemeral metadata %v to Pod %s", podMetadata, pod.Name)
+			}
+		}
 
-	// 2. Update ReplicaSet so that any new pods it creates will have the metadata
-	rs, err = c.updateReplicaSetFallbackToPatch(ctx, modifiedRS)
-	if err != nil {
-		c.log.Infof("failed to sync ephemeral metadata %v to ReplicaSet %s: %v", podMetadata, rs.Name, err)
-		return fmt.Errorf("failed to sync ephemeral metadata: %w", err)
-	}
+		// 2. Update ReplicaSet so that any new pods it creates will have the metadata
+		rs, err = c.updateReplicaSetFallbackToPatch(ctx, modifiedRS)
+		if err != nil {
+			c.log.Infof("failed to sync ephemeral metadata %v to ReplicaSet %s: %v", podMetadata, rs.Name, err)
+			return fmt.Errorf("failed to sync ephemeral metadata: %w", err)
+		}
 
-	c.log.Infof("synced ephemeral metadata %v to ReplicaSet %s", podMetadata, rs.Name)
-	return nil
+		c.log.Infof("synced ephemeral metadata %v to ReplicaSet %s", podMetadata, rs.Name)
+		return nil
+	} else if c.statefulsetRolloutContext != nil {
+		// TODO
+
+		return nil
+	} else {
+		return nil
+	}
 }

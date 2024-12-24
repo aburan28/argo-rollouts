@@ -7,6 +7,27 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
+type deploymentRolloutContext struct {
+	newRS *appsv1.ReplicaSet
+	// stableRS will be nil when a Rollout is first deployed, and will be equal to newRS when fully promoted
+	stableRS *appsv1.ReplicaSet
+	// allRSs are all the ReplicaSets associated with the Rollout
+	allRSs []*appsv1.ReplicaSet
+	// olderRSs are "older" ReplicaSets -- anything which is not the newRS
+	// this includes the stableRS (when in the middle of an update)
+	olderRSs []*appsv1.ReplicaSet
+	// otherRSs are ReplicaSets which are neither new or stable (allRSs - newRS - stableRS)
+	otherRSs []*appsv1.ReplicaSet
+}
+
+type statefulsetRolloutContext struct {
+	oldStatefulSet             []*appsv1.StatefulSet
+	newStatefulSet             *appsv1.StatefulSet
+	statefulSetList            []*appsv1.StatefulSet
+	currentControllerRevisions []*appsv1.ControllerRevision
+	updatedControllerRevision  *appsv1.ControllerRevision
+}
+
 type rolloutContext struct {
 	reconcilerBase
 
@@ -28,6 +49,9 @@ type rolloutContext struct {
 	olderRSs []*appsv1.ReplicaSet
 	// otherRSs are ReplicaSets which are neither new or stable (allRSs - newRS - stableRS)
 	otherRSs []*appsv1.ReplicaSet
+
+	deploymentRolloutContext  *deploymentRolloutContext
+	statefulsetRolloutContext *statefulsetRolloutContext
 
 	oldStatefulSet         []*appsv1.StatefulSet
 	newStatefulSet         *appsv1.StatefulSet

@@ -515,7 +515,7 @@ func (c *Controller) newRolloutContext(rollout *v1alpha1.Rollout) (*rolloutConte
 	// 	return &roCtx, nil
 
 	// } else {
-	if rollout.Spec.WorkloadRef.Kind == "Deployment" {
+	if rollout.Spec.WorkloadRef.Kind == DeploymentWorkload {
 		rsList, err := c.getReplicaSetsForRollouts(rollout)
 		if err != nil {
 			return nil, err
@@ -619,6 +619,8 @@ func (c *Controller) newRolloutContext(rollout *v1alpha1.Rollout) (*rolloutConte
 		}
 
 		fmt.Println("controllerRevisionList", controllerRevisionList)
+
+		// check whether or not we need to create the statefulset
 
 		// currentControllerRevision := controllerrevisionutil.GetCurrentControllerRevision(rollout, controllerRevisionList)
 		// updateControllerRevision := controllerrevisionutil.GetUpdateControllerRevision(rollout, controllerRevisionList)
