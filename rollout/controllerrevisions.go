@@ -24,6 +24,7 @@ func (c *Controller) getControllerRevisionsForRollouts(r *v1alpha1.Rollout) ([]*
 	if err != nil {
 		return nil, fmt.Errorf("rollout %s/%s has invalid label selector: %v", r.Namespace, r.Name, err)
 	}
+	fmt.Println("controllerRevisionSelector", controllerRevisionSelector)
 
 	canAdoptFunc := controller.RecheckDeletionTimestamp(func(ctx context.Context) (metav1.Object, error) {
 		fresh, err := c.argoprojclientset.ArgoprojV1alpha1().Rollouts(r.Namespace).Get(ctx, r.Name, metav1.GetOptions{})

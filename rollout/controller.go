@@ -193,6 +193,8 @@ func NewController(cfg ControllerConfig) *Controller {
 		argoprojclientset:             cfg.ArgoProjClientset,
 		dynamicclientset:              cfg.DynamicClientSet,
 		smiclientset:                  cfg.SmiClientSet,
+		controllerRevisionLister:      cfg.ControllerRevisionInformer.Lister(),
+		statefulSetLister:             cfg.StatefulSetInformer.Lister(),
 		replicaSetLister:              cfg.ReplicaSetInformer.Lister(),
 		replicaSetSynced:              cfg.ReplicaSetInformer.Informer().HasSynced,
 		rolloutsInformer:              cfg.RolloutsInformer.Informer(),
@@ -605,6 +607,7 @@ func (c *Controller) newRolloutContext(rollout *v1alpha1.Rollout) (*rolloutConte
 		roCtx.newStatus.Canary.Weights = rollout.Status.Canary.Weights
 		return &roCtx, nil
 	} else {
+
 		// statefulSetList, err := c.getStatefulSetsForRollouts(rollout)
 		// if err != nil {
 		// 	return nil, err
@@ -615,10 +618,10 @@ func (c *Controller) newRolloutContext(rollout *v1alpha1.Rollout) (*rolloutConte
 			return nil, err
 		}
 
-		// newRS := replicasetutil.FindNewReplicaSet(rollout, rsList)
-		// olderRSs := replicasetutil.FindOldReplicaSets(rollout, rsList, newRS)
-		// stableRS := replicasetutil.GetStableRS(rollout, newRS, olderRSs)
-		// otherRSs := replicasetutil.GetOtherRSs(rollout, newRS, stableRS, rsList)
+		fmt.Println("controllerRevisionList", controllerRevisionList)
+
+		// currentControllerRevision := controllerrevisionutil.GetCurrentControllerRevision(rollout, controllerRevisionList)
+		// updateControllerRevision := controllerrevisionutil.GetUpdateControllerRevision(rollout, controllerRevisionList)
 
 		exList, err := c.getExperimentsForRollout(rollout)
 		if err != nil {
@@ -658,6 +661,23 @@ func (c *Controller) newRolloutContext(rollout *v1alpha1.Rollout) (*rolloutConte
 			},
 			reconcilerBase: c.reconcilerBase,
 		}
+
+		// Get Rollout Validation errors
+		err = roCtx.getRolloutValidationErrors()
+		if err != nil {
+			if vErr, ok := err.(*field.Error); ok {
+				// We want to frequently requeue rollouts with InvalidSpec errors, because the error
+				// condition might be timing related (e.g. the Rollout was applied before the Service).
+				c.enqueueRolloutAfter(roCtx.rollout, 20*time.Second)
+				err := roCtx.createInvalidRolloutCondition(vErr, roCtx.rollout)
+				if err != nil {
+					return nil, err
+				}
+				return nil, vErr
+			}
+			return nil, err
+		}
+
 		return &roCtx, nil
 	}
 }
