@@ -37,6 +37,7 @@ type Rollout struct {
 type RolloutSpec struct {
 	TemplateResolvedFromRef bool `json:"-"`
 	SelectorResolvedFromRef bool `json:"-"`
+
 	// Number of desired pods. This is a pointer to distinguish between explicit
 	// zero and not specified. Defaults to 1.
 	// +optional
@@ -82,6 +83,11 @@ type RolloutSpec struct {
 	RestartAt *metav1.Time `json:"restartAt,omitempty" protobuf:"bytes,9,opt,name=restartAt"`
 	// Analysis configuration for the analysis runs to retain
 	Analysis *AnalysisRunStrategy `json:"analysis,omitempty" protobuf:"bytes,11,opt,name=analysis"`
+	// +optional
+	WorkloadType string `json:"workloadType,omitempty" protobuf:"bytes,14,opt,name=workloadType"`
+	// Add volume claim templates when using statefulset workload type
+	// +optional
+	VolumeClaimTemplates []corev1.PersistentVolumeClaim `json:"volumeClaimTemplates,omitempty" protobuf:"bytes,15,opt,name=volumeClaimTemplates"`
 }
 
 func (s *RolloutSpec) SetResolvedSelector(selector *metav1.LabelSelector) {
@@ -965,10 +971,22 @@ type RolloutStatus struct {
 	// The generation of referenced workload observed by the rollout controller
 	// +optional
 	WorkloadObservedGeneration string `json:"workloadObservedGeneration,omitempty" protobuf:"bytes,24,opt,name=workloadObservedGeneration"`
-	/// ALB keeps information regarding the ALB and TargetGroups
+	// ALB keeps information regarding the ALB and TargetGroups
 	ALB *ALBStatus `json:"alb,omitempty" protobuf:"bytes,25,opt,name=alb"`
-	/// ALBs keeps information regarding multiple ALBs and TargetGroups in a multi ingress scenario
+	// ALBs keeps information regarding multiple ALBs and TargetGroups in a multi ingress scenario
 	ALBs []ALBStatus `json:"albs,omitempty" protobuf:"bytes,26,opt,name=albs"`
+	// StatefulSetStatus keeps information regarding the StatefulSet
+	StatefulSetStatus StatefulSetStatus `json:"statefulSetStatus,omitempty" protobuf:"bytes,27,opt,name=statefulSetStatus"`
+}
+
+// StatefulSetStatus keeps information regarding the StatefulSet rollout
+type StatefulSetStatus struct {
+	Partition       int32  `json:"partition,omitempty" protobuf:"varint,1,opt,name=partition"`
+	Replicas        int32  `json:"replicas,omitempty" protobuf:"varint,2,opt,name=replicas"`
+	UpdatedReplicas int32  `json:"updatedReplicas,omitempty" protobuf:"varint,3,opt,name=updatedReplicas"`
+	Name            string `json:"name,omitempty" protobuf:"bytes,4,opt,name=name"`
+	CurrentRevision string `json:"currentRevision,omitempty" protobuf:"bytes,5,opt,name=currentRevision"`
+	UpdatedRevision string `json:"updatedRevision,omitempty" protobuf:"bytes,6,opt,name=updatedRevision"`
 }
 
 // BlueGreenStatus status fields that only pertain to the blueGreen rollout

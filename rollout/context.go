@@ -26,6 +26,8 @@ type statefulsetRolloutContext struct {
 	statefulSetList            []*appsv1.StatefulSet
 	currentControllerRevisions []*appsv1.ControllerRevision
 	updatedControllerRevision  *appsv1.ControllerRevision
+	matchedStatefulsets        []*appsv1.StatefulSet
+	matchedControllerRevisions []*appsv1.ControllerRevision
 }
 
 type rolloutContext struct {
