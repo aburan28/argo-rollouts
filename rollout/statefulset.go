@@ -154,3 +154,23 @@ func (c *rolloutContext) Rollout(rollout *v1alpha1.Rollout) error {
 
 	return nil
 }
+
+func (c *rolloutContext) rolloutStatefulSetCanary() {
+	// check if the desired statefulset matches deployed
+
+}
+
+func (c *rolloutContext) rolloutStatefulSetBlueGreen() {
+
+}
+
+func (c *rolloutContext) deleteStatefulSet(rollout *v1alpha1.Rollout) error {
+	// if deletiontimestamp is set, then the statefulset is already being deleted
+	ctx := context.TODO()
+	statefulSetName := rollout.Status.StatefulSetStatus.Name
+	err := c.kubeclientset.AppsV1().StatefulSets(rollout.Namespace).Delete(ctx, statefulSetName, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}

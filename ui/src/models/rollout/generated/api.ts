@@ -2326,6 +2326,18 @@ export interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutSpec
      * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutSpec
      */
     analysis?: GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1AnalysisRunStrategy;
+    /**
+     * 
+     * @type {string}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutSpec
+     */
+    workloadType?: string;
+    /**
+     * 
+     * @type {Array<K8sIoApiCoreV1PersistentVolumeClaim>}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutSpec
+     */
+    volumeClaimTemplates?: Array<K8sIoApiCoreV1PersistentVolumeClaim>;
 }
 /**
  * 
@@ -2489,6 +2501,12 @@ export interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutStat
      * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutStatus
      */
     albs?: Array<GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1ALBStatus>;
+    /**
+     * 
+     * @type {GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1StatefulSetStatus}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutStatus
+     */
+    statefulSetStatus?: GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1StatefulSetStatus;
 }
 /**
  * 
@@ -2856,6 +2874,49 @@ export interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1SkyWalkingM
      * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1SkyWalkingMetric
      */
     interval?: string;
+}
+/**
+ * 
+ * @export
+ * @interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1StatefulSetStatus
+ */
+export interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1StatefulSetStatus {
+    /**
+     * 
+     * @type {number}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1StatefulSetStatus
+     */
+    partition?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1StatefulSetStatus
+     */
+    replicas?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1StatefulSetStatus
+     */
+    updatedReplicas?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1StatefulSetStatus
+     */
+    name?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1StatefulSetStatus
+     */
+    currentRevision?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1StatefulSetStatus
+     */
+    updatedRevision?: string;
 }
 /**
  * 
@@ -4922,6 +4983,25 @@ export interface K8sIoApiCoreV1LocalObjectReference {
     name?: string;
 }
 /**
+ * 
+ * @export
+ * @interface K8sIoApiCoreV1ModifyVolumeStatus
+ */
+export interface K8sIoApiCoreV1ModifyVolumeStatus {
+    /**
+     * 
+     * @type {string}
+     * @memberof K8sIoApiCoreV1ModifyVolumeStatus
+     */
+    targetVolumeAttributesClassName?: string;
+    /**
+     * status is the status of the ControllerModifyVolume operation. It can be in any of following states:  - Pending    Pending indicates that the PersistentVolumeClaim cannot be modified due to unmet requirements, such as    the specified VolumeAttributesClass not existing.  - InProgress    InProgress indicates that the volume is being modified.  - Infeasible   Infeasible indicates that the request has been rejected as invalid by the CSI driver. To    resolve the error, a valid VolumeAttributesClass needs to be specified. Note: New statuses can be added in the future. Consumers should check for unknown statuses and fail appropriately.
+     * @type {string}
+     * @memberof K8sIoApiCoreV1ModifyVolumeStatus
+     */
+    status?: string;
+}
+/**
  * Represents an NFS mount that lasts the lifetime of a pod. NFS volumes do not support ownership management or SELinux relabeling.
  * @export
  * @interface K8sIoApiCoreV1NFSVolumeSource
@@ -5044,6 +5124,74 @@ export interface K8sIoApiCoreV1ObjectFieldSelector {
 /**
  * 
  * @export
+ * @interface K8sIoApiCoreV1PersistentVolumeClaim
+ */
+export interface K8sIoApiCoreV1PersistentVolumeClaim {
+    /**
+     * 
+     * @type {K8sIoApimachineryPkgApisMetaV1ObjectMeta}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaim
+     */
+    metadata?: K8sIoApimachineryPkgApisMetaV1ObjectMeta;
+    /**
+     * 
+     * @type {K8sIoApiCoreV1PersistentVolumeClaimSpec}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaim
+     */
+    spec?: K8sIoApiCoreV1PersistentVolumeClaimSpec;
+    /**
+     * 
+     * @type {K8sIoApiCoreV1PersistentVolumeClaimStatus}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaim
+     */
+    status?: K8sIoApiCoreV1PersistentVolumeClaimStatus;
+}
+/**
+ * 
+ * @export
+ * @interface K8sIoApiCoreV1PersistentVolumeClaimCondition
+ */
+export interface K8sIoApiCoreV1PersistentVolumeClaimCondition {
+    /**
+     * 
+     * @type {string}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimCondition
+     */
+    type?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimCondition
+     */
+    status?: string;
+    /**
+     * 
+     * @type {K8sIoApimachineryPkgApisMetaV1Time}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimCondition
+     */
+    lastProbeTime?: K8sIoApimachineryPkgApisMetaV1Time;
+    /**
+     * 
+     * @type {K8sIoApimachineryPkgApisMetaV1Time}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimCondition
+     */
+    lastTransitionTime?: K8sIoApimachineryPkgApisMetaV1Time;
+    /**
+     * 
+     * @type {string}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimCondition
+     */
+    reason?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimCondition
+     */
+    message?: string;
+}
+/**
+ * 
+ * @export
  * @interface K8sIoApiCoreV1PersistentVolumeClaimSpec
  */
 export interface K8sIoApiCoreV1PersistentVolumeClaimSpec {
@@ -5101,6 +5249,61 @@ export interface K8sIoApiCoreV1PersistentVolumeClaimSpec {
      * @memberof K8sIoApiCoreV1PersistentVolumeClaimSpec
      */
     volumeAttributesClassName?: string;
+}
+/**
+ * PersistentVolumeClaimStatus is the current status of a persistent volume claim.
+ * @export
+ * @interface K8sIoApiCoreV1PersistentVolumeClaimStatus
+ */
+export interface K8sIoApiCoreV1PersistentVolumeClaimStatus {
+    /**
+     * 
+     * @type {string}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimStatus
+     */
+    phase?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimStatus
+     */
+    accessModes?: Array<string>;
+    /**
+     * 
+     * @type {{ [key: string]: K8sIoApimachineryPkgApiResourceQuantity; }}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimStatus
+     */
+    capacity?: { [key: string]: K8sIoApimachineryPkgApiResourceQuantity; };
+    /**
+     * 
+     * @type {Array<K8sIoApiCoreV1PersistentVolumeClaimCondition>}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimStatus
+     */
+    conditions?: Array<K8sIoApiCoreV1PersistentVolumeClaimCondition>;
+    /**
+     * allocatedResources tracks the resources allocated to a PVC including its capacity. Key names follow standard Kubernetes label syntax. Valid values are either:  * Un-prefixed keys:   - storage - the capacity of the volume.  * Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\" Apart from above values - keys that are unprefixed or have kubernetes.io prefix are considered reserved and hence may not be used.  Capacity reported here may be larger than the actual capacity when a volume expansion operation is requested. For storage quota, the larger value from allocatedResources and PVC.spec.resources is used. If allocatedResources is not set, PVC.spec.resources alone is used for quota calculation. If a volume expansion capacity request is lowered, allocatedResources is only lowered if there are no expansion operations in progress and if the actual volume capacity is equal or lower than the requested capacity.  A controller that receives PVC update with previously unknown resourceName should ignore the update for the purpose it was designed. For example - a controller that only is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid resources associated with PVC.  This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature. +featureGate=RecoverVolumeExpansionFailure +optional
+     * @type {{ [key: string]: K8sIoApimachineryPkgApiResourceQuantity; }}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimStatus
+     */
+    allocatedResources?: { [key: string]: K8sIoApimachineryPkgApiResourceQuantity; };
+    /**
+     * allocatedResourceStatuses stores status of resource being resized for the given PVC. Key names follow standard Kubernetes label syntax. Valid values are either:  * Un-prefixed keys:   - storage - the capacity of the volume.  * Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\" Apart from above values - keys that are unprefixed or have kubernetes.io prefix are considered reserved and hence may not be used.  ClaimResourceStatus can be in any of following states:  - ControllerResizeInProgress:   State set when resize controller starts resizing the volume in control-plane.  - ControllerResizeFailed:   State set when resize has failed in resize controller with a terminal error.  - NodeResizePending:   State set when resize controller has finished resizing the volume but further resizing of   volume is needed on the node.  - NodeResizeInProgress:   State set when kubelet starts resizing the volume.  - NodeResizeFailed:   State set when resizing has failed in kubelet with a terminal error. Transient errors don't set   NodeResizeFailed. For example: if expanding a PVC for more capacity - this field can be one of the following states:  - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeInProgress\"      - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeFailed\"      - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizePending\"      - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeInProgress\"      - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeFailed\" When this field is not set, it means that no resize operation is in progress for the given PVC.  A controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus should ignore the update for the purpose it was designed. For example - a controller that only is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid resources associated with PVC.  This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature. +featureGate=RecoverVolumeExpansionFailure +mapType=granular +optional
+     * @type {{ [key: string]: string; }}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimStatus
+     */
+    allocatedResourceStatuses?: { [key: string]: string; };
+    /**
+     * 
+     * @type {string}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimStatus
+     */
+    currentVolumeAttributesClassName?: string;
+    /**
+     * 
+     * @type {K8sIoApiCoreV1ModifyVolumeStatus}
+     * @memberof K8sIoApiCoreV1PersistentVolumeClaimStatus
+     */
+    modifyVolumeStatus?: K8sIoApiCoreV1ModifyVolumeStatus;
 }
 /**
  * PersistentVolumeClaimTemplate is used to produce PersistentVolumeClaim objects as part of an EphemeralVolumeSource.

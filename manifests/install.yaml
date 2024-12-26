@@ -16103,6 +16103,165 @@ spec:
                     - containers
                     type: object
                 type: object
+              volumeClaimTemplates:
+                items:
+                  properties:
+                    apiVersion:
+                      type: string
+                    kind:
+                      type: string
+                    metadata:
+                      type: object
+                    spec:
+                      properties:
+                        accessModes:
+                          items:
+                            type: string
+                          type: array
+                        dataSource:
+                          properties:
+                            apiGroup:
+                              type: string
+                            kind:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - kind
+                          - name
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        dataSourceRef:
+                          properties:
+                            apiGroup:
+                              type: string
+                            kind:
+                              type: string
+                            name:
+                              type: string
+                            namespace:
+                              type: string
+                          required:
+                          - kind
+                          - name
+                          type: object
+                        resources:
+                          properties:
+                            limits:
+                              additionalProperties:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              type: object
+                            requests:
+                              additionalProperties:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              type: object
+                          type: object
+                        selector:
+                          properties:
+                            matchExpressions:
+                              items:
+                                properties:
+                                  key:
+                                    type: string
+                                  operator:
+                                    type: string
+                                  values:
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - key
+                                - operator
+                                type: object
+                              type: array
+                            matchLabels:
+                              additionalProperties:
+                                type: string
+                              type: object
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        storageClassName:
+                          type: string
+                        volumeAttributesClassName:
+                          type: string
+                        volumeMode:
+                          type: string
+                        volumeName:
+                          type: string
+                      type: object
+                    status:
+                      properties:
+                        accessModes:
+                          items:
+                            type: string
+                          type: array
+                        allocatedResourceStatuses:
+                          additionalProperties:
+                            type: string
+                          type: object
+                          x-kubernetes-map-type: granular
+                        allocatedResources:
+                          additionalProperties:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          type: object
+                        capacity:
+                          additionalProperties:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          type: object
+                        conditions:
+                          items:
+                            properties:
+                              lastProbeTime:
+                                format: date-time
+                                type: string
+                              lastTransitionTime:
+                                format: date-time
+                                type: string
+                              message:
+                                type: string
+                              reason:
+                                type: string
+                              status:
+                                type: string
+                              type:
+                                type: string
+                            required:
+                            - status
+                            - type
+                            type: object
+                          type: array
+                        currentVolumeAttributesClassName:
+                          type: string
+                        modifyVolumeStatus:
+                          properties:
+                            status:
+                              type: string
+                            targetVolumeAttributesClassName:
+                              type: string
+                          required:
+                          - status
+                          type: object
+                        phase:
+                          type: string
+                      type: object
+                  type: object
+                type: array
               workloadRef:
                 properties:
                   apiVersion:
@@ -16114,6 +16273,8 @@ spec:
                   scaleDown:
                     type: string
                 type: object
+              workloadType:
+                type: string
             type: object
           status:
             properties:
@@ -16433,6 +16594,24 @@ spec:
                 type: string
               stableRS:
                 type: string
+              statefulSetStatus:
+                properties:
+                  currentRevision:
+                    type: string
+                  name:
+                    type: string
+                  partition:
+                    format: int32
+                    type: integer
+                  replicas:
+                    format: int32
+                    type: integer
+                  updatedReplicas:
+                    format: int32
+                    type: integer
+                  updatedRevision:
+                    type: string
+                type: object
               updatedReplicas:
                 format: int32
                 type: integer

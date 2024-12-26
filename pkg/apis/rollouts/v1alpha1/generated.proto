@@ -1496,6 +1496,13 @@ message RolloutSpec {
 
   // Analysis configuration for the analysis runs to retain
   optional AnalysisRunStrategy analysis = 11;
+
+  // +optional
+  optional string workloadType = 14;
+
+  // Add volume claim templates when using statefulset workload type
+  // +optional
+  repeated k8s.io.api.core.v1.PersistentVolumeClaim volumeClaimTemplates = 15;
 }
 
 // RolloutStatus is the status for a Rollout resource
@@ -1603,11 +1610,14 @@ message RolloutStatus {
   // +optional
   optional string workloadObservedGeneration = 24;
 
-  // / ALB keeps information regarding the ALB and TargetGroups
+  // ALB keeps information regarding the ALB and TargetGroups
   optional ALBStatus alb = 25;
 
-  // / ALBs keeps information regarding multiple ALBs and TargetGroups in a multi ingress scenario
+  // ALBs keeps information regarding multiple ALBs and TargetGroups in a multi ingress scenario
   repeated ALBStatus albs = 26;
+
+  // StatefulSetStatus keeps information regarding the StatefulSet
+  optional StatefulSetStatus statefulSetStatus = 27;
 }
 
 // RolloutStrategy defines strategy to apply during next rollout
@@ -1786,6 +1796,21 @@ message SkyWalkingMetric {
   optional string query = 2;
 
   optional string interval = 3;
+}
+
+// StatefulSetStatus keeps information regarding the StatefulSet rollout
+message StatefulSetStatus {
+  optional int32 partition = 1;
+
+  optional int32 replicas = 2;
+
+  optional int32 updatedReplicas = 3;
+
+  optional string name = 4;
+
+  optional string currentRevision = 5;
+
+  optional string updatedRevision = 6;
 }
 
 message StepPluginStatus {

@@ -2173,6 +2173,17 @@
         "analysis": {
           "$ref": "#/definitions/github.com.argoproj.argo_rollouts.pkg.apis.rollouts.v1alpha1.AnalysisRunStrategy",
           "title": "Analysis configuration for the analysis runs to retain"
+        },
+        "workloadType": {
+          "type": "string",
+          "title": "+optional"
+        },
+        "volumeClaimTemplates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/k8s.io.api.core.v1.PersistentVolumeClaim"
+          },
+          "title": "Add volume claim templates when using statefulset workload type\n+optional"
         }
       },
       "title": "RolloutSpec is the spec for a Rollout resource"
@@ -2291,14 +2302,18 @@
         },
         "alb": {
           "$ref": "#/definitions/github.com.argoproj.argo_rollouts.pkg.apis.rollouts.v1alpha1.ALBStatus",
-          "title": "/ ALB keeps information regarding the ALB and TargetGroups"
+          "title": "ALB keeps information regarding the ALB and TargetGroups"
         },
         "albs": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/github.com.argoproj.argo_rollouts.pkg.apis.rollouts.v1alpha1.ALBStatus"
           },
-          "title": "/ ALBs keeps information regarding multiple ALBs and TargetGroups in a multi ingress scenario"
+          "title": "ALBs keeps information regarding multiple ALBs and TargetGroups in a multi ingress scenario"
+        },
+        "statefulSetStatus": {
+          "$ref": "#/definitions/github.com.argoproj.argo_rollouts.pkg.apis.rollouts.v1alpha1.StatefulSetStatus",
+          "title": "StatefulSetStatus keeps information regarding the StatefulSet"
         }
       },
       "title": "RolloutStatus is the status for a Rollout resource"
@@ -2574,6 +2589,33 @@
           "type": "string"
         }
       }
+    },
+    "github.com.argoproj.argo_rollouts.pkg.apis.rollouts.v1alpha1.StatefulSetStatus": {
+      "type": "object",
+      "properties": {
+        "partition": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "replicas": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "updatedReplicas": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "currentRevision": {
+          "type": "string"
+        },
+        "updatedRevision": {
+          "type": "string"
+        }
+      },
+      "title": "StatefulSetStatus keeps information regarding the StatefulSet rollout"
     },
     "github.com.argoproj.argo_rollouts.pkg.apis.rollouts.v1alpha1.StepPluginStatus": {
       "type": "object",
@@ -4165,6 +4207,20 @@
       },
       "title": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.\n+structType=atomic"
     },
+    "k8s.io.api.core.v1.ModifyVolumeStatus": {
+      "type": "object",
+      "properties": {
+        "targetVolumeAttributesClassName": {
+          "type": "string",
+          "title": "targetVolumeAttributesClassName is the name of the VolumeAttributesClass the PVC currently being reconciled"
+        },
+        "status": {
+          "type": "string",
+          "description": "status is the status of the ControllerModifyVolume operation. It can be in any of following states:\n - Pending\n   Pending indicates that the PersistentVolumeClaim cannot be modified due to unmet requirements, such as\n   the specified VolumeAttributesClass not existing.\n - InProgress\n   InProgress indicates that the volume is being modified.\n - Infeasible\n  Infeasible indicates that the request has been rejected as invalid by the CSI driver. To\n\t  resolve the error, a valid VolumeAttributesClass needs to be specified.\nNote: New statuses can be added in the future. Consumers should check for unknown statuses and fail appropriately."
+        }
+      },
+      "title": "ModifyVolumeStatus represents the status object of ControllerModifyVolume operation"
+    },
     "k8s.io.api.core.v1.NFSVolumeSource": {
       "type": "object",
       "properties": {
@@ -4268,6 +4324,52 @@
       },
       "title": "ObjectFieldSelector selects an APIVersioned field of an object.\n+structType=atomic"
     },
+    "k8s.io.api.core.v1.PersistentVolumeClaim": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "$ref": "#/definitions/k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta",
+          "title": "Standard object's metadata.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata\n+optional"
+        },
+        "spec": {
+          "$ref": "#/definitions/k8s.io.api.core.v1.PersistentVolumeClaimSpec",
+          "title": "spec defines the desired characteristics of a volume requested by a pod author.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims\n+optional"
+        },
+        "status": {
+          "$ref": "#/definitions/k8s.io.api.core.v1.PersistentVolumeClaimStatus",
+          "title": "status represents the current information/status of a persistent volume claim.\nRead-only.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims\n+optional"
+        }
+      },
+      "title": "PersistentVolumeClaim is a user's request for and claim to a persistent volume"
+    },
+    "k8s.io.api.core.v1.PersistentVolumeClaimCondition": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "lastProbeTime": {
+          "$ref": "#/definitions/k8s.io.apimachinery.pkg.apis.meta.v1.Time",
+          "title": "lastProbeTime is the time we probed the condition.\n+optional"
+        },
+        "lastTransitionTime": {
+          "$ref": "#/definitions/k8s.io.apimachinery.pkg.apis.meta.v1.Time",
+          "title": "lastTransitionTime is the time the condition transitioned from one status to another.\n+optional"
+        },
+        "reason": {
+          "type": "string",
+          "title": "reason is a unique, this should be a short, machine understandable string that gives the reason\nfor condition's last transition. If it reports \"ResizeStarted\" that means the underlying\npersistent volume is being resized.\n+optional"
+        },
+        "message": {
+          "type": "string",
+          "title": "message is the human-readable message indicating details about last transition.\n+optional"
+        }
+      },
+      "title": "PersistentVolumeClaimCondition contains details about state of pvc"
+    },
     "k8s.io.api.core.v1.PersistentVolumeClaimSpec": {
       "type": "object",
       "properties": {
@@ -4312,6 +4414,59 @@
         }
       },
       "title": "PersistentVolumeClaimSpec describes the common attributes of storage devices\nand allows a Source for provider-specific attributes"
+    },
+    "k8s.io.api.core.v1.PersistentVolumeClaimStatus": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "title": "phase represents the current phase of PersistentVolumeClaim.\n+optional"
+        },
+        "accessModes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "accessModes contains the actual access modes the volume backing the PVC has.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1\n+optional"
+        },
+        "capacity": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/k8s.io.apimachinery.pkg.api.resource.Quantity"
+          },
+          "title": "capacity represents the actual resources of the underlying volume.\n+optional"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/k8s.io.api.core.v1.PersistentVolumeClaimCondition"
+          },
+          "title": "conditions is the current Condition of persistent volume claim. If underlying persistent volume is being\nresized then the Condition will be set to 'ResizeStarted'.\n+optional\n+patchMergeKey=type\n+patchStrategy=merge"
+        },
+        "allocatedResources": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/k8s.io.apimachinery.pkg.api.resource.Quantity"
+          },
+          "description": "allocatedResources tracks the resources allocated to a PVC including its capacity.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nCapacity reported here may be larger than the actual capacity when a volume expansion operation\nis requested.\nFor storage quota, the larger value from allocatedResources and PVC.spec.resources is used.\nIf allocatedResources is not set, PVC.spec.resources alone is used for quota calculation.\nIf a volume expansion capacity request is lowered, allocatedResources is only\nlowered if there are no expansion operations in progress and if the actual volume capacity\nis equal or lower than the requested capacity.\n\nA controller that receives PVC update with previously unknown resourceName\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.\n\nThis is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.\n+featureGate=RecoverVolumeExpansionFailure\n+optional"
+        },
+        "allocatedResourceStatuses": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "allocatedResourceStatuses stores status of resource being resized for the given PVC.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nClaimResourceStatus can be in any of following states:\n\t- ControllerResizeInProgress:\n\t\tState set when resize controller starts resizing the volume in control-plane.\n\t- ControllerResizeFailed:\n\t\tState set when resize has failed in resize controller with a terminal error.\n\t- NodeResizePending:\n\t\tState set when resize controller has finished resizing the volume but further resizing of\n\t\tvolume is needed on the node.\n\t- NodeResizeInProgress:\n\t\tState set when kubelet starts resizing the volume.\n\t- NodeResizeFailed:\n\t\tState set when resizing has failed in kubelet with a terminal error. Transient errors don't set\n\t\tNodeResizeFailed.\nFor example: if expanding a PVC for more capacity - this field can be one of the following states:\n\t- pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeFailed\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizePending\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeFailed\"\nWhen this field is not set, it means that no resize operation is in progress for the given PVC.\n\nA controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.\n\nThis is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.\n+featureGate=RecoverVolumeExpansionFailure\n+mapType=granular\n+optional"
+        },
+        "currentVolumeAttributesClassName": {
+          "type": "string",
+          "title": "currentVolumeAttributesClassName is the current name of the VolumeAttributesClass the PVC is using.\nWhen unset, there is no VolumeAttributeClass applied to this PersistentVolumeClaim\nThis is an alpha field and requires enabling VolumeAttributesClass feature.\n+featureGate=VolumeAttributesClass\n+optional"
+        },
+        "modifyVolumeStatus": {
+          "$ref": "#/definitions/k8s.io.api.core.v1.ModifyVolumeStatus",
+          "title": "ModifyVolumeStatus represents the status object of ControllerModifyVolume operation.\nWhen this is unset, there is no ModifyVolume operation being attempted.\nThis is an alpha field and requires enabling VolumeAttributesClass feature.\n+featureGate=VolumeAttributesClass\n+optional"
+        }
+      },
+      "description": "PersistentVolumeClaimStatus is the current status of a persistent volume claim."
     },
     "k8s.io.api.core.v1.PersistentVolumeClaimTemplate": {
       "type": "object",

@@ -18,6 +18,10 @@ import (
 )
 
 func (c *rolloutContext) rolloutCanary() error {
+	rolloutType := 
+	if c.statefulsetRolloutContext != nil {
+		
+	} else { 
 	var err error
 	if replicasetutil.PodTemplateOrStepsChanged(c.rollout, c.newRS) {
 		c.newRS, err = c.getAllReplicaSetsAndSyncRevision()
@@ -93,6 +97,7 @@ func (c *rolloutContext) rolloutCanary() error {
 	}
 
 	return c.syncRolloutStatusCanary()
+}
 }
 
 func (c *rolloutContext) reconcileCanaryStableReplicaSet() (bool, error) {

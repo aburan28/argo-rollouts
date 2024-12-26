@@ -35,16 +35,29 @@ const Type = "Istio"
 const SpecHttpNotFound = "spec.http not found"
 
 // NewReconciler returns a reconciler struct that brings the Virtual Service into the desired state
-func NewReconciler(r *v1alpha1.Rollout, client dynamic.Interface, recorder record.EventRecorder, virtualServiceLister, destinationRuleLister dynamiclister.Lister, replicaSets []*appsv1.ReplicaSet) *Reconciler {
-	return &Reconciler{
-		rollout: r,
-		log:     logutil.WithRollout(r),
+func NewReconciler(r *v1alpha1.Rollout, client dynamic.Interface, recorder record.EventRecorder, virtualServiceLister, destinationRuleLister dynamiclister.Lister, replicaSets []*appsv1.ReplicaSet, statefulSets []*appsv1.StatefulSet) *Reconciler {
+	if statefulSets != nil {
+		return &Reconciler{
+			rollout:               r,
+			log:                   logutil.WithRollout(r),
+			client:                client,
+			recorder:              recorder,
+			virtualServiceLister:  virtualServiceLister,
+			destinationRuleLister: destinationRuleLister,
+			statefulSets:          statefulSets,
+		}
 
-		client:                client,
-		recorder:              recorder,
-		virtualServiceLister:  virtualServiceLister,
-		destinationRuleLister: destinationRuleLister,
-		replicaSets:           replicaSets,
+	} else {
+		return &Reconciler{
+			rollout: r,
+			log:     logutil.WithRollout(r),
+
+			client:                client,
+			recorder:              recorder,
+			virtualServiceLister:  virtualServiceLister,
+			destinationRuleLister: destinationRuleLister,
+			replicaSets:           replicaSets,
+		}
 	}
 }
 
@@ -57,6 +70,7 @@ type Reconciler struct {
 	virtualServiceLister  dynamiclister.Lister
 	destinationRuleLister dynamiclister.Lister
 	replicaSets           []*appsv1.ReplicaSet
+	statefulSets          []*appsv1.StatefulSet
 }
 
 type virtualServicePatch struct {

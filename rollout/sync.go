@@ -360,6 +360,10 @@ func (c *rolloutContext) scaleReplicaSetAndRecordEvent(rs *appsv1.ReplicaSet, ne
 	return scaled, newRS, err
 }
 
+// func (c *rolloutContext) scaleStatefulSet(ss *appsv1.StatefulSet, newScale int32, rollout *v1alpha1.Rollout, scalingOperation string) (bool, *appsv1.StatefulSet, error) {
+
+// }
+
 func (c *rolloutContext) scaleReplicaSet(rs *appsv1.ReplicaSet, newScale int32, rollout *v1alpha1.Rollout, scalingOperation string) (bool, *appsv1.ReplicaSet, error) {
 	ctx := context.TODO()
 	sizeNeedsUpdate := *(rs.Spec.Replicas) != newScale
