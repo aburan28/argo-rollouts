@@ -82,6 +82,14 @@ type RolloutSpec struct {
 	RestartAt *metav1.Time `json:"restartAt,omitempty" protobuf:"bytes,9,opt,name=restartAt"`
 	// Analysis configuration for the analysis runs to retain
 	Analysis *AnalysisRunStrategy `json:"analysis,omitempty" protobuf:"bytes,11,opt,name=analysis"`
+
+	// plugin
+	RolloutPlugin *RolloutPlugin `json:"rolloutPlugin,omitempty" protobuf:"bytes,14,opt,name=rolloutPlugin"`
+}
+
+type RolloutPlugin struct {
+	Name   string          `json:"name" protobuf:"bytes,1,opt,name=name"`
+	Config json.RawMessage `json:"config" protobuf:"bytes,2,opt,name=config"`
 }
 
 func (s *RolloutSpec) SetResolvedSelector(selector *metav1.LabelSelector) {
