@@ -1437,6 +1437,12 @@ message RolloutPause {
   optional k8s.io.apimachinery.pkg.util.intstr.IntOrString duration = 1;
 }
 
+message RolloutPlugin {
+  optional string name = 1;
+
+  optional bytes config = 2;
+}
+
 // RolloutSpec is the spec for a Rollout resource
 message RolloutSpec {
   // Number of desired pods. This is a pointer to distinguish between explicit
@@ -1496,6 +1502,9 @@ message RolloutSpec {
 
   // Analysis configuration for the analysis runs to retain
   optional AnalysisRunStrategy analysis = 11;
+
+  // plugin
+  optional RolloutPlugin rolloutPlugin = 14;
 }
 
 // RolloutStatus is the status for a Rollout resource

@@ -85,6 +85,17 @@ spec:
                     format: int32
                     type: integer
                 type: object
+              rolloutPlugin:
+                properties:
+                  config:
+                    format: byte
+                    type: string
+                  name:
+                    type: string
+                required:
+                - config
+                - name
+                type: object
               selector:
                 properties:
                   matchExpressions:

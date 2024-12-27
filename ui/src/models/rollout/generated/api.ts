@@ -2245,6 +2245,25 @@ export interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutPaus
 /**
  * 
  * @export
+ * @interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutPlugin
+ */
+export interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutPlugin {
+    /**
+     * 
+     * @type {string}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutPlugin
+     */
+    name?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutPlugin
+     */
+    config?: string;
+}
+/**
+ * 
+ * @export
  * @interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutSpec
  */
 export interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutSpec {
@@ -2326,6 +2345,12 @@ export interface GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutSpec
      * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutSpec
      */
     analysis?: GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1AnalysisRunStrategy;
+    /**
+     * 
+     * @type {GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutPlugin}
+     * @memberof GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutSpec
+     */
+    rolloutPlugin?: GithubComArgoprojArgoRolloutsPkgApisRolloutsV1alpha1RolloutPlugin;
 }
 /**
  * 

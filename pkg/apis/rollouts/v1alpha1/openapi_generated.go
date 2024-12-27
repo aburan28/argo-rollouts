@@ -129,6 +129,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.SetMirrorRoute":                                  schema_pkg_apis_rollouts_v1alpha1_SetMirrorRoute(ref),
 		"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.Sigv4Config":                                     schema_pkg_apis_rollouts_v1alpha1_Sigv4Config(ref),
 		"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.SkyWalkingMetric":                                schema_pkg_apis_rollouts_v1alpha1_SkyWalkingMetric(ref),
+		"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.StatefulSetStatus":                               schema_pkg_apis_rollouts_v1alpha1_StatefulSetStatus(ref),
 		"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.StepPluginStatus":                                schema_pkg_apis_rollouts_v1alpha1_StepPluginStatus(ref),
 		"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.StickinessConfig":                                schema_pkg_apis_rollouts_v1alpha1_StickinessConfig(ref),
 		"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.StringMatch":                                     schema_pkg_apis_rollouts_v1alpha1_StringMatch(ref),
@@ -4533,11 +4534,31 @@ func schema_pkg_apis_rollouts_v1alpha1_RolloutSpec(ref common.ReferenceCallback)
 							Ref:         ref("github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.AnalysisRunStrategy"),
 						},
 					},
+					"workloadType": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"volumeClaimTemplates": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Add volume claim templates when using statefulset workload type",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/api/core/v1.PersistentVolumeClaim"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.AnalysisRunStrategy", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.ObjectRef", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.RollbackWindowSpec", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.RolloutStrategy", "k8s.io/api/core/v1.PodTemplateSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+			"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.AnalysisRunStrategy", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.ObjectRef", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.RollbackWindowSpec", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.RolloutStrategy", "k8s.io/api/core/v1.PersistentVolumeClaim", "k8s.io/api/core/v1.PodTemplateSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
@@ -4730,13 +4751,13 @@ func schema_pkg_apis_rollouts_v1alpha1_RolloutStatus(ref common.ReferenceCallbac
 					},
 					"alb": {
 						SchemaProps: spec.SchemaProps{
-							Description: "/ ALB keeps information regarding the ALB and TargetGroups",
+							Description: "ALB keeps information regarding the ALB and TargetGroups",
 							Ref:         ref("github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.ALBStatus"),
 						},
 					},
 					"albs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "/ ALBs keeps information regarding multiple ALBs and TargetGroups in a multi ingress scenario",
+							Description: "ALBs keeps information regarding multiple ALBs and TargetGroups in a multi ingress scenario",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -4748,11 +4769,18 @@ func schema_pkg_apis_rollouts_v1alpha1_RolloutStatus(ref common.ReferenceCallbac
 							},
 						},
 					},
+					"statefulSetStatus": {
+						SchemaProps: spec.SchemaProps{
+							Description: "StatefulSetStatus keeps information regarding the StatefulSet",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.StatefulSetStatus"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.ALBStatus", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.BlueGreenStatus", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.CanaryStatus", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.PauseCondition", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.RolloutCondition", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+			"github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.ALBStatus", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.BlueGreenStatus", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.CanaryStatus", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.PauseCondition", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.RolloutCondition", "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.StatefulSetStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
@@ -5264,6 +5292,55 @@ func schema_pkg_apis_rollouts_v1alpha1_SkyWalkingMetric(ref common.ReferenceCall
 						},
 					},
 					"interval": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_rollouts_v1alpha1_StatefulSetStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "StatefulSetStatus keeps information regarding the StatefulSet rollout",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"partition": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"replicas": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"updatedReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"currentRevision": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"updatedRevision": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

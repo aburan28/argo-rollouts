@@ -2115,6 +2115,18 @@
       },
       "title": "RolloutPause defines a pause stage for a rollout"
     },
+    "github.com.argoproj.argo_rollouts.pkg.apis.rollouts.v1alpha1.RolloutPlugin": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "config": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
     "github.com.argoproj.argo_rollouts.pkg.apis.rollouts.v1alpha1.RolloutSpec": {
       "type": "object",
       "properties": {
@@ -2173,6 +2185,10 @@
         "analysis": {
           "$ref": "#/definitions/github.com.argoproj.argo_rollouts.pkg.apis.rollouts.v1alpha1.AnalysisRunStrategy",
           "title": "Analysis configuration for the analysis runs to retain"
+        },
+        "rolloutPlugin": {
+          "$ref": "#/definitions/github.com.argoproj.argo_rollouts.pkg.apis.rollouts.v1alpha1.RolloutPlugin",
+          "title": "plugin"
         }
       },
       "title": "RolloutSpec is the spec for a Rollout resource"
