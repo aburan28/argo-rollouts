@@ -82,7 +82,6 @@ type RolloutSpec struct {
 	RestartAt *metav1.Time `json:"restartAt,omitempty" protobuf:"bytes,9,opt,name=restartAt"`
 	// Analysis configuration for the analysis runs to retain
 	Analysis *AnalysisRunStrategy `json:"analysis,omitempty" protobuf:"bytes,11,opt,name=analysis"`
-
 	// plugin
 	RolloutPlugin *RolloutPlugin `json:"rolloutPlugin,omitempty" protobuf:"bytes,14,opt,name=rolloutPlugin"`
 }
@@ -1045,6 +1044,14 @@ type RolloutAnalysisRunStatus struct {
 	Name    string        `json:"name" protobuf:"bytes,1,opt,name=name"`
 	Status  AnalysisPhase `json:"status" protobuf:"bytes,2,opt,name=status,casttype=AnalysisPhase"`
 	Message string        `json:"message,omitempty" protobuf:"bytes,3,opt,name=message"`
+}
+
+type RolloutPluginStatus struct {
+	Name    string `json:"name" protobuf:"bytes,1,opt,name=name"`
+	Message string `json:"message,omitempty" protobuf:"bytes,2,opt,name=message"`
+	// Phase     RolloutPluginPhase     `json:"phase,omitempty" protobuf:"bytes,3,opt,name=phase"`
+	// Operation RolloutPluginOperation `json:"operation,omitempty" protobuf:"bytes,4,opt,name=operation"`
+	Status json.RawMessage `json:"status,omitempty" protobuf:"bytes,5,opt,name=status"`
 }
 
 type StepPluginStatus struct {
